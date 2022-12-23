@@ -1,0 +1,97 @@
+EasyCTF Walkthrough
+------------------------------------
+
+
+Questions
+------------------------------------
+
+
+Question 1 - How many services are running under port 1000? 
+
+Answer: 2
+------------------------------------
+
+Starting with a simple NMAP scan, scan the ports with the NMAP scan:
+<sudo nmap -A -T5 -oN <file name> <IP address>>
+
+This scan will provide the answer to both questions 1 and 2 and provide additional information that we can use in later questions. The <-T5> option is optional, but does speed up the scan significantly.
+
+The -oN <file name> portion is optional as this writes the NMAP scan to a readable file, but this is highly advisable as having the scan results for reference later without having to re-run the scan is quite helpful. 
+
+
+Question 2 - What is running on the higher port? 
+
+Answer: SSH
+------------------------------------
+
+Using the info from the above scan, we get the answer to this question.
+
+
+Question 3 - What's the CVE you're using against the application? 
+
+Answer: CVE-2019-9053
+------------------------------------
+
+The next few questions are going to require some additional enumeration beyond the nmap scan. The first stop is to look for additional directories with gobuster. Gobuster is a directory/DNS/VHost busting tool. The command that we are going to use is <gobuster dir /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -u <http://IP ADDRESS>>. Gobuster will take a few minutes to run, but will quickly populate a /simple directory that you can navigate to in your web browser. Browsing over this page will reveal a version of CMS Made Simple, specifically v 2.2.8. This is what we are looking for to find a vulnerability to exploit. Using either Searchsploit or ExploitDB, search for CMS. I personally used ExploitDB, but the payload that will be used is available to both search methods. The search criteria I used was 'CMS Made Simple 2.2' which, at the time of this writing yielded 10 results. The vulnerability that I exploited was 'CMS Made Simple < 2.2.10 - SQL Injection'. This is conveniently the answer to Question 4 below. The answer to question 3 is found under the CVE listing once you click on the exploit web link. Download the exploit and launch it with the following command <python 46635.py -u http://<IP ADDRESS/simple> --crack -w /usr/share/wordlists/seclists/best110.txt>. Once the exploit has finished, we will have a user name and a password, also the answer to question 5, - Username: Mitch and Password: Secret.
+
+
+Question 4 - To what kind of vulnerability is the application vulnerable? 
+
+Answer: SQLi
+------------------------------------
+
+See explanation in question 3 documentation
+
+
+Question 5 - What's the password? 
+
+Answer: secret
+------------------------------------
+
+See explanation in question 3 documentation
+
+Question 6 - Where can you login with the details obtained? 
+
+Answer: SSH
+------------------------------------
+
+Now we can login to the machine as a user. Using the SSH command, we can log in with the command <ssh mitch@<IP ADDRESS> -p 2222>. Don't forget to specify the port since SSH wasn't running on the default port of 22. 
+
+Question 7 - What is the user flag? 
+
+Answer: G00d j0b, keep up!
+------------------------------------
+
+We are now logged in as user mitch as can be seen with the <whoami> command. Before we move on, a bit of quick reconnaisance can be done to expedite the last few questions. First, let's see what sudo privileges mitch has using <sudo -l>. Mitch can run Vim without a password. This might be useful later, wink wink. We can check our current directory with <pwd> and enumerate the contents with <ls -la>. We see that we are in the /home/mitch directory and we can see a file by the name of 'user.txt'. Using the <cat> command, we get the answer to this question noted above. 
+
+Question 8 - Is there any other user in the home directory? 
+
+Answer: sunbath
+------------------------------------
+
+Navigate to the home directory and run the <ls -la> command again to get the answer to this question.
+
+
+Question 9 - What can you leverage to spawn a priviliged shell? 
+
+Answer: VIM
+------------------------------------
+
+Per the enumeration results of the <sudo -l> command in question 7, we know that mitch can run this application with root privileges and no password which is what we will use to gain root access. Using GTFOBins, we can search for a away to spawn the shell we need and escalate to the root user. Using option 'A' from GTFOBins and the <sudo> command, <sudo vim -c ':!/bin/sh'>, we have now rooted this machine. 
+
+
+Question 10 - What's the root flag? 
+
+Answer: W3ll d0n3. You made it!
+------------------------------------
+
+Navigate to the /root directory and run the <ls -la> command to enumerate the contents. Using <cat> read the 'root.txt' file for the flag and final answer for this machine. 
+
+
+Summary
+------------------------------------
+
+This was a very beginner friendly entry-level CTF that takes the user through the steps of a penetration test. Thank you for taking the time to use this material and I hope it was helpful to you. If you have any feedback, positive or negative, or just want to interact, please reach out to me on my social media:
+
+LinkedIn: www.linkedin.com/in/tbryant788
+Twitter: @TheTBryant788
