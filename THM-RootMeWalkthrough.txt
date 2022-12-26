@@ -1,0 +1,84 @@
+RootMe Walkthrough
+------------------------------------
+
+
+Questions
+------------------------------------
+
+
+---Task 2---
+
+Question 1 - Scan the machine, how many ports are open?
+
+Answer: 2
+------------------------------------
+
+Starting with a simple NMAP scan, scan the ports with the NMAP scan:
+<sudo nmap -sV -T5 -oN <file name> <IP address>>
+
+This scan will provide the answer for questions 1-3 by scanning the ports and by obtaining version information. It is highly recommended that the results be output to a separate file for future reference.
+
+
+Question 2 - What version of Apache is running?
+
+Answer: 2.4.29
+------------------------------------
+
+
+Question 3 - What service is running on port 22?
+
+Answer: SSH
+------------------------------------
+
+
+Question 4 - Find directories on the web server using the GoBuster tool.
+
+Answer: N/A
+------------------------------------
+
+This task simply requires that the gobuster tool be successfully used. The following command will get the required information for Question 5:
+<gobuster dir -w </usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt> -u <HTTP://IP Address>>
+
+*Pay attention to the other directories that are located as well for a future task's questions*
+
+
+---Task 3---
+
+Question 1 - Find a form to upload and get a reverse shell, and then find the flag.
+
+Answer: THM{y0u_g0t_a_sh3ll}
+------------------------------------
+There is only 1 answer in this task, but it does require multiple steps. The first stop is to check out the "hidden" directory that was found with GoBuster at the end of Task 1, /panel/. Navigating to this page in a web browser reveals a form upload page. This is probably the attack vector as the question from THM states to find a form to upload to gain a shell :) The document I used was from PenTest Monkey, https://pentestmonkey.net/tools/web-shells/php-reverse-shell, but there are most likely others that will work as well. Once downloaded, change the variables in the php script as well per the instructions on PenTest Monkey. Once the script is squared away, it can be uploaded... OR it can be rejected based on a file type filter on the upload action... Fortunately, there is a simple fix - alter the file extension! A simple change from <.php> to <.php5> will allow the successful upload of the file to the server. 
+
+Before executing the PHP script, a listener will need to be setup to catch the connection. Netcats will work fine for this with the command <nc -nlvp <PORT>>. Make sure the port that the listener is listening on is the same one in the script that was uploaded or the connection won't work. Once the listener is active, navigate to the 'uploads' directory in the web browser and the php script should be visible. Click on it to execute it and receive the connection on the listener. Once the connection is established, the hunt for the first flag can begin.
+
+The easiest method to finding the flag is to use the <find -type f -name user.txt 2>/dev/null> command to find the file location and then <cat <file path/user.txt> to find the flag for this task.
+
+
+--Task 4---
+
+Question 1 - Search for files with SUID permission. Which file is weird?
+
+Answer: /usr/bin/python
+------------------------------------
+Using the command <find / -user root -perm /4000 2>/dev/null>, a list of the files with the SUID bit active is generated. Looking over the list, the stand out is the python file. Coincidentally, that is the answer and the attack vector to this question.
+
+
+Question 2 - Find a form to escalate your privileges.
+
+Answer: ./python -c 'import os; os.execl("/bin/sh", "sh", "-p")'
+------------------------------------
+Now that a potential escalation vector is identified, we need to find a way to exploit it. Navigate to GTFOBins, and search for Python. When the results are displayed, click on the SUID tag to find the command to run to gain root access. Once that command is copied, navigate to the directory on the web server containing the python program, </usr/bin> and then run the command above. You should now have root access on this server.
+
+
+Question 3 - What is the flag in the file 'root.txt'?
+
+Answer: THM{pr1v1l3g3_3sc4l4t10n}
+------------------------------------
+Finding this flag can be accomplished in the same manner as the flag from the previous task - with the <find> and <cat> commands.
+
+
+Summary
+------------------------------------
+
+A simple and straightforward CTF for beginners much like the SimpleCTF. Thank you for checking this out and I hope that is helped you and that you learned as well. As always, please feel free to contact me on my social media account(s) on Twitter (@TheTBryant788) and/or LinkedIn(www.linkedin.com/in/tbryant788). See you in the next one!
